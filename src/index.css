@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*{
+   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+}
+
+html {
+   box-sizing: border-box;
+   overflow-x: hidden;
+}
+ 
+
+
+/* Remove default margin and padding */
+body,   p, ol, ul, dl, figure {
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove default styling from buttons, inputs, etc. */
+button,
+select,
+textarea {
+  margin: 0;
+  padding: 0;
+ 
+  background: transparent;
+}
+
+.border {
+   border: 1px solid black;
+}
