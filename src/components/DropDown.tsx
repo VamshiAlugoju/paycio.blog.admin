@@ -8,7 +8,6 @@ type DropdownProps = {
 export default function Dropdown({ options, onSelect }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
-  console.log(options , ">>>>>>>>>>....")
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleSelect = (option: string) => {

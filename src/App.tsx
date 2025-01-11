@@ -7,7 +7,7 @@ import Blog from "./pages/Blog"
 
 function App() {
  
-
+ 
   return (
      <Routes> 
         <Route path="/" element={<Layout />}>
@@ -16,6 +16,7 @@ function App() {
           <Route  path="/blogs" element={  <Blogs /> } />
           <Route path="/blogs/:id" element={  <Blog /> }  />
         </Route>
+        <Route path="*" element={<AddBlog />} />
      </Routes>
   )
 }

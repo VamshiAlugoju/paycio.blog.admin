@@ -1,37 +1,39 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import {
   useForm,
-  SubmitHandler,
-  UseFormRegisterReturn,
-  FieldError,
+ 
 } from "react-hook-form";
-import { cn } from "../lib/utils/cn";
+ 
 import Dropdown from "../components/DropDown";
-import { X } from "lucide-react";
+ 
 import Editor from "../components/Editor";
 import apiClient from "../api/apiClient";
-import { API_URL, blogRoutes } from "../api/urls";
+import {   blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
-
-type BlogFormData = {
-  slug: string;
-  title: string;
-  description: string;
-  featuredImage: string;
-  body: string;
-  category: string;
-  tags: string;
-  metaTitle: string;
-  metaDescription: string;
-  og_url: string;
-  og_title: string;
-  og_description: string;
-};
+import { BlogFormData, createCategory } from "../lib/utils/blog.lib";
+import ImgUploadSection from "../components/ImgUploadSection";
+import FormInput from "../components/FormInput";
 
 export type category = {
   name: string;
 };
+
+const initialFormData : BlogFormData = {
+  slug: "",
+  title: "",
+  description: "",
+  featuredImage: "",
+  body: "",
+  category: "",
+  tags: "",
+  metaTitle: "",
+  metaDescription: "",
+  og_url: "",
+  og_title: "",
+  og_description: "",
+  metaKeywords: "",
+}
 
 function AddBlog() {
   const [categories, setCategories] = useState<category[]>([]);
@@ -39,7 +41,6 @@ function AddBlog() {
   const [newCategory, setNewCateogory] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [content, setContent] = useState<string>("");
   const [selectedCategory, setSelctedCategory] = useState("");
 
@@ -52,10 +53,9 @@ function AddBlog() {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<BlogFormData>();
+  } = useForm<BlogFormData>({defaultValues:initialFormData});
 
   function removeTags(idx: number) {
-    console.log("cliekce");
     setTags((prev) => {
       return prev.filter((tag, index) => index !== idx);
     });
@@ -67,51 +67,44 @@ function AddBlog() {
   }
 
   const onSubmit = async (data: BlogFormData) => {
-   
-    try{
-
+    try {
       if (selectedCategory === "") {
         alert("select category");
         return;
       }
-  
       const createBlogPayload = {
         title: data.title,
-        description: data.metaDescription,
+        description: data.description,
         body: content,
         slug: data.slug,
         author: "John Doe",
         meta_title: data.metaTitle,
         meta_desc: data.metaDescription,
-        meta_keywords: "blog, first post, my blog",
+        meta_keywords: data.metaKeywords,
         category: selectedCategory,
         tags: tags,
-        featured_img: "https://example.com/images/featured.jpg",
-        og_image: "https://example.com/images/featured.jpg",
+        featured_img: data.featuredImage,
+        og_image: data.og_url,
         og_title: data.og_title,
         og_description: data.og_description,
       };
-  
+
       const response = await apiClient.post(
         blogRoutes.createBlog,
         createBlogPayload
       );
-       if(response && response.status===false){
-        alert(response.error)
-       }
-  
-      // reset(); // Clear the form after submission
-    }catch(err){
-      console.log(err)
+    
+      if (response && response.status === false) {
+        alert(response.error);
+        return;
+      }
+      alert("added blog successfully");
+      reset()
+    } catch (err) {
+      console.log(err);
+
     }
   };
-
-  function uploadImage() {
-    if (selectedImage) {
-      // upload to cloud
-      console.log("came here");
-    }
-  }
 
   useEffect(() => {
     (async () => {
@@ -119,15 +112,23 @@ function AddBlog() {
     })();
   }, []);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   async function addCategory() {
     try {
-      if (newCategory.trim() != "") {
-        const response = await apiClient.post(blogRoutes.createCategory, {
-          name: newCategory,
-        });
-        console.log(response);
-        getCategories();
-      }
+      await createCategory(newCategory);
+      setNewCateogory("");
+      getCategories();
     } catch (err) {
       console.log(err);
     }
@@ -135,7 +136,11 @@ function AddBlog() {
   async function getCategories() {
     try {
       const response = await apiClient.get(blogRoutes.getAllCategories);
-      console.log(response.categories, "cat ?>>>>");
+        
+      if(response && response.status === false){
+       alert("cannot get categories")
+        return;
+      }
       setCategories(response.categories);
     } catch (err) {
       console.log(err);
@@ -171,13 +176,13 @@ function AddBlog() {
           <div className="flex items-start gap-4">
             <div>
               <label className="text-gray-600 dark:text-gray-400">
-                Description
+                Description:
               </label>
               <textarea
                 className=" block w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100   "
                 {...register("description", {
                   required: "Description is required",
-                   minLength: {
+                  minLength: {
                     value: 10,
                     message:
                       "og_description must be at least 10 characters long",
@@ -251,6 +256,12 @@ function AddBlog() {
                 onChange={(e) => {
                   setTagInput(e.target.value);
                 }}
+                onKeyDown={(e) => {
+                  console.log(e.key);
+                  if (e.key === "Enter") {
+                    addTag(tagInput);
+                  }
+                }}
               />
               <Button
                 className=" py-1 text-sm px-4 bg-black text-white "
@@ -280,7 +291,7 @@ function AddBlog() {
 
           <div className="my-4">
             <h3> Meta data: </h3>
-            <div className="flex gap-4 items-center  my-4 ">
+            <div className="flex gap-4 items-center  my-4  flex-wrap ">
               <FormInput
                 id="metaTitle"
                 label="Meta-Title:"
@@ -297,14 +308,34 @@ function AddBlog() {
                 placeholder=" Enter meta description"
                 register={register("metaDescription", {
                   required: "MetaDescription is required",
-                   minLength: {
+                  minLength: {
                     value: 10,
                     message:
                       "og_description must be at least 10 characters long",
-                  },  
+                  },
                 })}
                 error={errors.metaDescription}
               />
+              <div className=" flex gap-2">
+                 
+                <div>
+                  <label className="text-gray-600 dark:text-gray-400">
+                    Meta Keywords:
+                  </label>
+                  <textarea
+                    className=" block w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100   "
+                    {...register("metaKeywords", {
+                      required: "metaKeywords is required",
+                    })}
+                    placeholder="Enter meta keywords "
+                  />
+                  {errors.metaKeywords && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.metaKeywords.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex gap-4 items-center flex-wrap  ">
               <FormInput
@@ -345,28 +376,7 @@ function AddBlog() {
 
         {/* right section  */}
         <div>
-          <div className="flex flex-col gap-2">
-            <div>
-              <label htmlFor="featuredImage"> Upload Image </label>
-              <input
-                id="uploadImg"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    setSelectedImage(e.target.files[0]);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <Button onClick={uploadImage}>Upload Image</Button>
-            </div>
-            <div className="flex items-center gap-2 ">
-              <p>Image Url</p>
-              <input type="text" className="max-h-5" contentEditable={false} />
-            </div>
-          </div>
+          <ImgUploadSection />
         </div>
       </div>
 
@@ -389,44 +399,3 @@ function AddBlog() {
 }
 
 export default AddBlog;
-
- export  interface FormInputProps {
-  id: string;
-  label: string;
-  placeholder?: string;
-  register: UseFormRegisterReturn;
-  error?: FieldError;
-  className?: string;
-  disabled?:boolean
-}
-
- export const FormInput: React.FC<FormInputProps> = ({
-  id,
-  label,
-  placeholder,
-  register,
-  error,
-  className,
-  disabled
-}) => {
-  return (
-    <div className={cn("mb-4", className)}>
-      <label className="text-gray-600 dark:text-gray-400" htmlFor={id}>
-        {label}
-      </label>
-      <input
-      disabled={disabled}
-        id={id}
-        className={`block w-80 py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 ${
-          error ? "border-red-500" : ""
-        }`}
-        {...register}
-        placeholder={placeholder}
-      />
-      {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
-    </div>
-  );
-};
-
-
-

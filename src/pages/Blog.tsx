@@ -12,16 +12,15 @@ function Blog() {
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [isEditable, setIsEditable] = useState(false);
   const [categories, setCategories] = useState<category[]>([]);
-
+  
   const params = useParams();
-  console.log(params);
+  
 
   async function getBlogBySlug(Slug: string) {
     try {
       setLoading(true);
       const response = await apiClient.get(blogRoutes.getBlogBySlug + Slug);
-      console.log(response);
-      setBlog(response.blog);
+      setBlog(response.data);
     } catch (err) {
       console.log(err);
     } finally {
@@ -49,37 +48,11 @@ function Blog() {
               blog={blog}
               categories={categories}
               isEditable={isEditable}
+              setIsEditable={setIsEditable}
+              setBlog={setBlog}
             />
           </div>
-          <div className="w-full flex justify-center items-center mb-6 ">
-            <div  className= " flex items-center " >
-              {!isEditable && (
-                <Button
-                  onClick={() => setIsEditable(!isEditable)}
-                  className="bg-black p-4 py-2 rounded-md  text-white "
-                >
-                  Edit
-                </Button>
-              )}
-
-              {isEditable && (
-                <div className=" flex items-center gap-2" >
-                      <Button
-                    onClick={() => setIsEditable(!isEditable)}
-                    className="bg-green-400 p-4 py-2 rounded-md  text-black border-none "
-                  >
-                    Submit
-                  </Button>
-                  <Button
-                    onClick={() => setIsEditable(!isEditable)}
-                    className="bg-red-400 p-4 py-2 rounded-md   text-black border-none "
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
+          
        
         </>
       )}

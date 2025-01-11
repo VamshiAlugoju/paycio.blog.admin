@@ -13,24 +13,10 @@ import apiClient from "../api/apiClient";
 import { blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
-import { FormInput } from "../pages/AddBlog";
+ import FormInput from "./FormInput";
 import { BlogPost } from "../pages/Blogs";
 import { cn } from "../lib/utils/cn";
-
-type BlogFormData = {
-  slug: string;
-  title: string;
-  description: string;
-  featuredImage: string;
-  body: string;
-  category: string;
-  tags: string;
-  metaTitle: string;
-  metaDescription: string;
-  og_url: string;
-  og_title: string;
-  og_description: string;
-};
+import ImgUploadSection from "./ImgUploadSection";
 
 export type category = {
   name: string;
@@ -40,9 +26,17 @@ type BlogData = {
   blog: BlogPost;
   categories: category[];
   isEditable: boolean;
+  setIsEditable: React.Dispatch<React.SetStateAction<boolean>>;
+  setBlog: React.Dispatch<React.SetStateAction<BlogPost | null>>;
 };
 
-function UpdateSection({ blog, categories, isEditable }: BlogData) {
+function UpdateSection({
+  blog,
+  categories,
+  isEditable,
+  setIsEditable,
+  setBlog
+}: BlogData) {
   const blogInitialData: BlogPost = {
     _id: blog._id,
     title: blog.title,
@@ -61,7 +55,7 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
     og_description: blog.og_description,
     createdAt: blog.createdAt,
     updatedAt: blog.updatedAt,
-    __v: blog.__v,
+   
   };
 
   const [newCategory, setNewCateogory] = useState("");
@@ -96,12 +90,7 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
 
   const onSubmit = async (data: BlogPost) => {
     try {
-      if (selectedCategory === "") {
-        alert("select category");
-        return;
-      }
-
-      const createBlogPayload = {
+      const updateBlogPayload = {
         title: data.title,
         description: data.description,
         body: content,
@@ -109,34 +98,31 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
         author: "John Doe",
         meta_title: data.meta_title,
         meta_desc: data.meta_desc,
-        meta_keywords: "blog, first post, my blog",
+        meta_keywords:  data.meta_keywords ,
         category: selectedCategory,
         tags: tags,
-        featured_img: "https://example.com/images/featured.jpg",
-        og_image: "https://example.com/images/featured.jpg",
+        featured_img: data.featured_img,
+        og_image: data.og_image,
         og_title: data.og_title,
         og_description: data.og_description,
       };
-
       const response = await apiClient.post(
-        blogRoutes.createBlog,
-        createBlogPayload
+        blogRoutes.updateBlog + data.slug,
+        updateBlogPayload
       );
-      if (response && response.status === false) {
-        alert(response.error);
+      if (!response.status) {
+        alert(response.message);
+        return;
       }
-
-      // reset(); // Clear the form after submission
+     
+      setBlog(response.blog);
+      setIsEditable(false);
+      alert("updated blog successfully");
     } catch (err) {
       console.log(err);
     }
   };
-
-  function uploadImage() {
-    if (selectedImage) {
-      console.log("came here");
-    }
-  }
+ 
 
   async function addCategory() {
     try {
@@ -144,11 +130,32 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
         const response = await apiClient.post(blogRoutes.createCategory, {
           name: newCategory,
         });
+
+        if(response.status === false){
+          alert(response.error);
+          return;
+        }
+        alert("category added successfully");
       }
     } catch (err) {
       console.log(err);
     }
   }
+
+    useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isEditable) return; // Ensure it only triggers when `isEditable` is true
+      event.preventDefault();
+      event.returnValue = " Are you sure you want to leave?";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isEditable]);
+
 
   return (
     <div className="w-[90%] flex flex-col items-center ">
@@ -367,28 +374,7 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
 
         {/* right section  */}
         <div>
-          <div className="flex flex-col gap-2">
-            <div>
-              <label htmlFor="featuredImage"> Upload Image </label>
-              <input
-                id="uploadImg"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    setSelectedImage(e.target.files[0]);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <Button onClick={uploadImage}>Upload Image</Button>
-            </div>
-            <div className="flex items-center gap-2 ">
-              <p>Image Url</p>
-              <input type="text" className="max-h-5" contentEditable={false} />
-            </div>
-          </div>
+         <ImgUploadSection />
         </div>
       </div>
 
@@ -401,6 +387,34 @@ function UpdateSection({ blog, categories, isEditable }: BlogData) {
           initialContent={blog.body}
           editable={!isEditable}
         />
+      </div>
+
+      <div className="mt-4">
+        {!isEditable && (
+          <Button
+            onClick={() => setIsEditable(!isEditable)}
+            className="bg-black p-4 py-2 rounded-md  text-white "
+          >
+            Edit
+          </Button>
+        )}
+
+        {isEditable && (
+          <div className=" flex items-center gap-2">
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              className="bg-green-400 p-4 py-2 rounded-md  text-black border-none "
+            >
+              Submit
+            </Button>
+            <Button
+              onClick={() => setIsEditable(!isEditable)}
+              className="bg-red-400 p-4 py-2 rounded-md   text-black border-none "
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="h-12"></div>

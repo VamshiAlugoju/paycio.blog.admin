@@ -14,10 +14,10 @@ html {
 
 
 /* Remove default margin and padding */
-body,   p, ol, ul, dl, figure {
+/* body,   p, ol, ul, dl, figure {
   margin: 0;
   padding: 0;
-}
+} */
 
 /* Remove default styling from buttons, inputs, etc. */
 button,
@@ -25,10 +25,19 @@ select,
 textarea {
   margin: 0;
   padding: 0;
- 
   background: transparent;
 }
 
 .border {
    border: 1px solid black;
+}
+
+.preview  img  {
+   max-width: 100%;
+   height: unset;
+}
+
+.preview iframe{
+    max-width: 100%;
+   height: fit-content;
 }

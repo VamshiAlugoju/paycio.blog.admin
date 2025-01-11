@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import apiClient from "../api/apiClient";
 import { blogRoutes } from "../api/urls";
 import Dropdown from "../components/DropDown";
@@ -6,7 +6,7 @@ import Button from "../components/ui/Button";
 import { category } from "./AddBlog";
 import { useNavigate } from "react-router";
 
-  export interface BlogPost {
+export interface BlogPost {
   _id: string;
   title: string;
   description: string;
@@ -24,12 +24,16 @@ import { useNavigate } from "react-router";
   og_description: string;
   createdAt: string; // ISO Date String
   updatedAt: string; // ISO Date String
-  __v: number;
 }
 
 function Blogs() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<category[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  // const [filterdBlogs, setFilterdBlogs] = useState<BlogPost[]>([]);
+
+  const value = useDebounce(searchTerm, 300);
+
   const navigate = useNavigate();
   async function getAllBlogs() {
     try {
@@ -39,6 +43,32 @@ function Blogs() {
       console.log(err);
     }
   }
+
+  async function selecteCategory(categoryName: string) {
+    if (categoryName === "") {
+      await getAllBlogs();
+      return;
+    }
+
+    try {
+      const response = await apiClient.get(
+        blogRoutes.getBlogsByCategory + categoryName
+      );
+      setBlogs(response.blogs);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  function handleBlogClick(blog: BlogPost) {
+    navigate(`/blogs/${blog.slug}`);
+  }
+
+  const filteredBlogs = useMemo(() => {
+    if(value === "") return blogs
+    return blogs.filter((blog) => blog.title.toLocaleLowerCase().includes(value.toLocaleLowerCase()));
+  }, [blogs, value]);
+
 
   useEffect(() => {
     try {
@@ -52,37 +82,31 @@ function Blogs() {
     }
   }, []);
 
-  async function selecteCategory(categoryName: string) {
-    if (categoryName === "") {
-      await getAllBlogs();
-      return;
-    }
-
-    try {
-      const response = await apiClient.get(
-        blogRoutes.getBlogsByCategory + categoryName
-      );
-      console.log(response);
-      setBlogs(response.blogs);
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-
-  function handleBlogClick( blog : BlogPost){
-    navigate(`/blogs/${blog.slug}`)
-  }
-
   return (
     <div className="p-2 w-full">
-      <TopSection categories={categories} selecteCategory={selecteCategory} />
+      <TopSection
+        categories={categories}
+        selecteCategory={selecteCategory}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
       <div>
         <div className="flex flex-col gap-1 justify-center items-center ">
-            {blogs.length === 0  && <p className="text-slate-800 text-sm mt-4 " > No Blogs found </p> }
-          {blogs.map((blog) => {
-            return <BlogItem key={blog.slug} blog={blog} handleBlogClick={handleBlogClick} />;
-          })}
+          {filteredBlogs.length === 0 ? (
+            <p className="text-slate-800 text-sm mt-4 "> No Blogs found </p>
+          ) : (
+            <>
+              {filteredBlogs.map((blog) => {
+                return (
+                  <BlogItem
+                    key={blog.slug}
+                    blog={blog}
+                    handleBlogClick={handleBlogClick}
+                  />
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -94,8 +118,15 @@ export default Blogs;
 type TopSectionProps = {
   categories: category[];
   selecteCategory: (categoryName: string) => void;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  searchTerm: string;
 };
-function TopSection({ categories, selecteCategory }: TopSectionProps) {
+function TopSection({
+  categories,
+  selecteCategory,
+  setSearchTerm,
+  searchTerm,
+}: TopSectionProps) {
   return (
     <div className="flex items-center w-full justify-center bg-slate-50 gap-4 p-2">
       <div className="flex items-center gap-2 ">
@@ -111,7 +142,7 @@ function TopSection({ categories, selecteCategory }: TopSectionProps) {
           }}
         >
           <option value="" selected>
-            select category
+            All
           </option>
           {categories.map((category) => (
             <option value={category.name}>{category.name}</option>
@@ -119,7 +150,15 @@ function TopSection({ categories, selecteCategory }: TopSectionProps) {
         </select>
       </div>
       <div className="flex gap-2">
-        <input className=" " type="text" placeholder="search" />
+        <input
+          className=" "
+          value={searchTerm}
+          type="text"
+          placeholder="Search by title"
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+          }}
+        />
         <Button>Search</Button>
       </div>
     </div>
@@ -128,10 +167,10 @@ function TopSection({ categories, selecteCategory }: TopSectionProps) {
 
 type BlogItemProps = {
   blog: BlogPost;
-  handleBlogClick : (blog : BlogPost) => void
+  handleBlogClick: (blog: BlogPost) => void;
 };
 
-function BlogItem({ blog , handleBlogClick }: BlogItemProps) {
+function BlogItem({ blog, handleBlogClick }: BlogItemProps) {
   return (
     <div
       className="flex gap-4 border border-slate-200 rounded-md p-2  max-w-[80vw] w-full flex-shrink-0 hover:bg-slate-100 cursor-pointer  "
@@ -144,13 +183,32 @@ function BlogItem({ blog , handleBlogClick }: BlogItemProps) {
         <img
           src={blog.featured_img}
           alt={blog.title}
-          className="h-full w-full rounded-md truncate "
+          className="h-full w-full rounded-md truncate object-cover "
         />
       </span>
-      <div className="flex-grow">
+      <div className="flex-grow w-full ">
         <p className="font-semibold text-black text-sm  "> {blog.title} </p>
-        <p className="text-xs text-slate-400 truncate "> {blog.description} </p>
+        <p className="text-xs text-slate-400 truncate w-[90%] ">
+          {" "}
+          {blog.description}{" "}
+        </p>
       </div>
     </div>
   );
+}
+
+function useDebounce<T>(value: T, delay: number = 300): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler); // Clear timeout on cleanup or value change
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }
