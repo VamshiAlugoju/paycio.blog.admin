@@ -128,7 +128,7 @@ function TopSection({
   searchTerm,
 }: TopSectionProps) {
   return (
-    <div className="flex items-center w-full justify-center bg-slate-50 gap-4 p-2">
+    <div className="flex items-center w-full justify-center bg-slate-50 gap-4 p-2  max-w-[80vw] mx-auto my-2 rounded-md ">
       <div className="flex items-center gap-2 ">
         <label className=" text-sm " htmlFor="">
           {" "}
