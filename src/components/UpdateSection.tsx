@@ -186,30 +186,7 @@ function UpdateSection({
             />
           </div>
           <div className="flex items-start gap-4">
-            <div>
-              <label className="text-gray-600 dark:text-gray-400">
-                Description
-              </label>
-              <textarea
-                disabled={!isEditable}
-                className=" block w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100   "
-                {...register("description", {
-                  required: "Description is required",
-                  minLength: {
-                    value: 10,
-                    message:
-                      "og_description must be at least 10 characters long",
-                  },
-                })}
-                placeholder="Enter blog description"
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-
+    
             <FormInput
               id="slug"
               label="Slug:"

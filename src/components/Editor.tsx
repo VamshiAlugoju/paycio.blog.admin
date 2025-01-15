@@ -1,11 +1,12 @@
 import React, { useState, useRef, useMemo } from "react";
 import JoditEditor from "jodit-react";
 
-interface ExampleProps {
+interface EditorProps {
   placeholder?: string;
   setFieldValue: any;
   initialContent?: string;
   editable?: boolean;
+  addTableOfContent?(id: string): void;
 }
 
 const editorDefaultStyles = `
@@ -15,30 +16,31 @@ const editorDefaultStyles = `
       }
     `;
 
-const IdButton = {
-  name: "Id", // Unique identifier for the button
-  exec: (editor: any) => {
-    const value = window.prompt("id");
-    if (value != null) {
-      const selection = editor.selection.sel;
-      const selectedNode =
-        selection?.anchorNode?.nodeType === 3
-          ? selection.anchorNode.parentNode
-          : selection?.anchorNode;
-      selectedNode.id = value;
-    }
-  },
-  tooltip: "Insert Id", 
-};
-
-const Editor: React.FC<ExampleProps> = ({
+const Editor: React.FC<EditorProps> = ({
   placeholder,
   setFieldValue,
   initialContent,
   editable = false,
+  addTableOfContent,
 }) => {
-  const editor = useRef<typeof JoditEditor | null>(null);
   const [content, setContent] = useState<string>(initialContent || "");
+  const IdButton = {
+    name: "Id",
+    exec: (editor: any) => {
+      const value = window.prompt("id");
+      if (value != null) {
+        const selection = editor.selection.sel;
+        const selectedNode =
+          selection?.anchorNode?.nodeType === 3
+            ? selection.anchorNode.parentNode
+            : selection?.anchorNode;
+        const validId = purifyId(value);
+        selectedNode.id = validId;
+        addTableOfContent && addTableOfContent(validId);
+      }
+    },
+    tooltip: "Insert Id",
+  };
 
   const config = useMemo(
     () => ({
@@ -57,10 +59,9 @@ const Editor: React.FC<ExampleProps> = ({
   return (
     <div>
       <JoditEditor
-        ref={editor}
         value={content}
         config={config}
-        tabIndex={1}  
+        // tabIndex={1}
         onBlur={(newContent: string) => {
           setContent(newContent);
           setFieldValue("content", newContent);
@@ -85,3 +86,16 @@ const Editor: React.FC<ExampleProps> = ({
 };
 
 export default Editor;
+
+function purifyId(inputId: string) {
+  let id = inputId.trim();
+  id = id.replace(/\s+/g, "-");
+  id = id.replace(/[^a-zA-Z0-9-_]/g, "");
+
+  if (/^[0-9]/.test(id)) {
+    id = `id-${id}`; // Prefix with 'id-' to avoid starting with a number
+  }
+  id = id.toLowerCase();
+
+  return id;
+}

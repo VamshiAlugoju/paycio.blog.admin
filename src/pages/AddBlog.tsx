@@ -1,28 +1,26 @@
-import  { useEffect, useState } from "react";
-import {
-  useForm,
- 
-} from "react-hook-form";
- 
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+
 import Dropdown from "../components/DropDown";
- 
+
 import Editor from "../components/Editor";
 import apiClient from "../api/apiClient";
-import {   blogRoutes } from "../api/urls";
+import { blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
 import { BlogFormData, createCategory } from "../lib/utils/blog.lib";
 import ImgUploadSection from "../components/ImgUploadSection";
 import FormInput from "../components/FormInput";
+import slugify from "slugify";
 
 export type category = {
   name: string;
 };
 
-const initialFormData : BlogFormData = {
+const initialFormData: BlogFormData = {
   slug: "",
   title: "",
-  description: "",
+  description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
   featuredImage: "",
   body: "",
   category: "",
@@ -33,7 +31,7 @@ const initialFormData : BlogFormData = {
   og_title: "",
   og_description: "",
   metaKeywords: "",
-}
+};
 
 function AddBlog() {
   const [categories, setCategories] = useState<category[]>([]);
@@ -43,27 +41,19 @@ function AddBlog() {
   const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState<string>("");
   const [selectedCategory, setSelctedCategory] = useState("");
-
-  function setFieldValue(fieldName: string, value: string) {
-    setContent(value);
-  }
-
+  const [tabelOfContents, setTableOfcontents] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<BlogFormData>({defaultValues:initialFormData});
+    watch,
+    setValue,
+  } = useForm<BlogFormData>({ defaultValues: initialFormData });
+  const title = watch("title");
 
-  function removeTags(idx: number) {
-    setTags((prev) => {
-      return prev.filter((tag, index) => index !== idx);
-    });
-  }
-
-  function addTag(tag: string) {
-    setTags((prev) => [...prev, tag]);
-    setTagInput("");
+  function setFieldValue(fieldName: string, value: string) {
+    setContent(value);
   }
 
   const onSubmit = async (data: BlogFormData) => {
@@ -74,7 +64,7 @@ function AddBlog() {
       }
       const createBlogPayload = {
         title: data.title,
-        description: data.description,
+        description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
         body: content,
         slug: data.slug,
         author: "John Doe",
@@ -87,24 +77,74 @@ function AddBlog() {
         og_image: data.og_url,
         og_title: data.og_title,
         og_description: data.og_description,
+        section_ids: tabelOfContents,
       };
 
       const response = await apiClient.post(
         blogRoutes.createBlog,
         createBlogPayload
       );
-    
+
       if (response && response.status === false) {
         alert(response.error);
         return;
       }
       alert("added blog successfully");
-      reset()
+      reset();
     } catch (err) {
       console.log(err);
-
     }
   };
+
+  async function addCategory() {
+    try {
+      await createCategory(newCategory);
+      setNewCateogory("");
+      getCategories();
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async function getCategories() {
+    try {
+      const response = await apiClient.get(blogRoutes.getAllCategories);
+
+      if (response && response.status === false) {
+        alert("cannot get categories");
+        return;
+      }
+      setCategories(response.categories);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  function removeTableOfContent(idx: number) {
+    setTableOfcontents((prev) => {
+      return prev.filter((tag, index) => index !== idx);
+    });
+  }
+
+  function addTableOfContent(id: string) {
+    setTableOfcontents((prev) => [...prev, id]);
+  }
+
+  function removeTags(idx: number) {
+    setTags((prev) => {
+      return prev.filter((tag, index) => index !== idx);
+    });
+  }
+
+  function addTag(tag: string) {
+    setTags((prev) => [...prev, tag]);
+    setTagInput("");
+  }
+
+  useEffect(() => {
+    if (title) {
+      setValue("slug", slugify(title, { strict: true, lower: true }));
+    }
+  }, [title]);
 
   useEffect(() => {
     (async () => {
@@ -123,29 +163,6 @@ function AddBlog() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
-
-  async function addCategory() {
-    try {
-      await createCategory(newCategory);
-      setNewCateogory("");
-      getCategories();
-    } catch (err) {
-      console.log(err);
-    }
-  }
-  async function getCategories() {
-    try {
-      const response = await apiClient.get(blogRoutes.getAllCategories);
-        
-      if(response && response.status === false){
-       alert("cannot get categories")
-        return;
-      }
-      setCategories(response.categories);
-    } catch (err) {
-      console.log(err);
-    }
-  }
 
   return (
     <div className="w-[90%] flex flex-col items-center ">
@@ -173,28 +190,24 @@ function AddBlog() {
               error={errors.featuredImage}
             />
           </div>
-          <div className="flex items-start gap-4">
-            <div>
-              <label className="text-gray-600 dark:text-gray-400">
-                Description:
-              </label>
-              <textarea
-                className=" block w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100   "
-                {...register("description", {
-                  required: "Description is required",
-                  minLength: {
-                    value: 10,
-                    message:
-                      "og_description must be at least 10 characters long",
-                  },
-                })}
-                placeholder="Enter blog description"
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description.message}
-                </p>
-              )}
+          <div className="flex items-start gap-4  ">
+            <div className="w-80   p-2 px-3 ">
+              <p className=" m-0 p-0 ">Table of Contents :</p>
+              <div className="flex items-center max-w-72 flex-wrap gap-1 ">
+                {tabelOfContents.length === 0 ? (
+                  <p className="m-0 text-xs "> No table of Contents</p>
+                ) : (
+                  <>
+                    {tabelOfContents.map((content, idx) => (
+                      <TagItem
+                        key={idx}
+                        tagName={content}
+                        onRemove={() => removeTableOfContent(idx)}
+                      />
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
 
             <FormInput
@@ -317,7 +330,6 @@ function AddBlog() {
                 error={errors.metaDescription}
               />
               <div className=" flex gap-2">
-                 
                 <div>
                   <label className="text-gray-600 dark:text-gray-400">
                     Meta Keywords:
@@ -383,7 +395,11 @@ function AddBlog() {
       {/* blog editor section  */}
       <div className="  w-full ">
         <h3>body:</h3>
-        <Editor placeholder="" setFieldValue={setFieldValue} />
+        <Editor
+          placeholder=""
+          setFieldValue={setFieldValue}
+          addTableOfContent={addTableOfContent}
+        />
       </div>
       <div>
         <Button

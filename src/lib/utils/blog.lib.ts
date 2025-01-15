@@ -20,7 +20,7 @@ export async function uploadImg( file : File ){
  export  type BlogFormData = {
   slug: string;
   title: string;
-  description: string;
+  description?: string;
   featuredImage: string;
   body: string;
   category: string;

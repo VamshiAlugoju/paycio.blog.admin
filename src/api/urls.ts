@@ -1,6 +1,6 @@
 import env from "../env-var/env";
 
-export const API_URL = env.api.baseUrl
+export const API_URL = "https://qwertyapi.paycio.com/"
 
 
  export  const blogRoutes = {
