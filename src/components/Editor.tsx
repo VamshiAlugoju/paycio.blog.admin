@@ -52,6 +52,7 @@ const Editor: React.FC<EditorProps> = ({
       showWordsCounter: true, // Word count
       showXPathInStatusbar: false, // Disable XPath in status bar;
       extraButtons: [IdButton],
+      height: "100vh",
     }),
     [placeholder, editable]
   );
@@ -67,20 +68,6 @@ const Editor: React.FC<EditorProps> = ({
           setFieldValue("content", newContent);
         }}
       />
-      <div style={{ marginTop: "20px" }}>
-        <h3>Content Preview:</h3>
-        <div
-          className="w-full break-all preview "
-          style={{
-            border: "1px solid #ccc",
-            padding: "10px",
-            minHeight: "100px",
-            background: "white",
-            boxSizing: "border-box",
-          }}
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      </div>
     </div>
   );
 };

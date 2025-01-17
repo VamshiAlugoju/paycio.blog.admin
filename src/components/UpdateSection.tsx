@@ -13,10 +13,11 @@ import apiClient from "../api/apiClient";
 import { blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
- import FormInput from "./FormInput";
+import FormInput from "./FormInput";
 import { BlogPost } from "../pages/Blogs";
 import { cn } from "../lib/utils/cn";
 import ImgUploadSection from "./ImgUploadSection";
+import { toast } from "react-toastify";
 
 export type category = {
   name: string;
@@ -35,7 +36,7 @@ function UpdateSection({
   categories,
   isEditable,
   setIsEditable,
-  setBlog
+  setBlog,
 }: BlogData) {
   const blogInitialData: BlogPost = {
     _id: blog._id,
@@ -55,7 +56,6 @@ function UpdateSection({
     og_description: blog.og_description,
     createdAt: blog.createdAt,
     updatedAt: blog.updatedAt,
-   
   };
 
   const [newCategory, setNewCateogory] = useState("");
@@ -77,7 +77,7 @@ function UpdateSection({
   } = useForm<BlogPost>({ defaultValues: blogInitialData });
 
   function removeTags(idx: number) {
-    console.log("cliekce");
+    if (!isEditable) return;
     setTags((prev) => {
       return prev.filter((tag, index) => index !== idx);
     });
@@ -98,7 +98,7 @@ function UpdateSection({
         author: "John Doe",
         meta_title: data.meta_title,
         meta_desc: data.meta_desc,
-        meta_keywords:  data.meta_keywords ,
+        meta_keywords: data.meta_keywords,
         category: selectedCategory,
         tags: tags,
         featured_img: data.featured_img,
@@ -111,18 +111,17 @@ function UpdateSection({
         updateBlogPayload
       );
       if (!response.status) {
-        alert(response.message);
+        toast.error(response.message);
         return;
       }
-     
+
       setBlog(response.blog);
       setIsEditable(false);
-      alert("updated blog successfully");
+      toast.success("Blog updated successfully");
     } catch (err) {
       console.log(err);
     }
   };
- 
 
   async function addCategory() {
     try {
@@ -131,18 +130,18 @@ function UpdateSection({
           name: newCategory,
         });
 
-        if(response.status === false){
-          alert(response.error);
+        if (response.status === false) {
+          toast.error(response.error);
           return;
         }
-        alert("category added successfully");
+        toast.success("category added successfully");
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-    useEffect(() => {
+  useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!isEditable) return; // Ensure it only triggers when `isEditable` is true
       event.preventDefault();
@@ -155,7 +154,6 @@ function UpdateSection({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [isEditable]);
-
 
   return (
     <div className="w-[90%] flex flex-col items-center ">
@@ -186,7 +184,6 @@ function UpdateSection({
             />
           </div>
           <div className="flex items-start gap-4">
-    
             <FormInput
               id="slug"
               label="Slug:"
@@ -210,6 +207,8 @@ function UpdateSection({
                   setSelctedCategory(option);
                 }}
                 options={categories.map((items) => items.name)}
+                disabled={!isEditable}
+                defaultOption={blog.category}
               />
             </div>
 
@@ -223,6 +222,7 @@ function UpdateSection({
                 onChange={(e) => {
                   setNewCateogory(e.target.value);
                 }}
+                disabled={!isEditable}
               />
               <button
                 disabled={!isEditable || newCategory.length === 0}
@@ -250,6 +250,11 @@ function UpdateSection({
                 placeholder="Enter tag names"
                 onChange={(e) => {
                   setTagInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    addTag(tagInput);
+                  }
                 }}
               />
               <Button
@@ -312,7 +317,7 @@ function UpdateSection({
             <div className="flex gap-4 items-center flex-wrap  ">
               <FormInput
                 id="og_title"
-                label="og_title:"
+                label="Og-Title:"
                 placeholder="Enter og_title"
                 register={register("og_title", {
                   required: "og_title is required",
@@ -322,7 +327,7 @@ function UpdateSection({
               />
               <FormInput
                 id="og_description"
-                label="og_description:"
+                label="Og-Description:"
                 placeholder="Enter og_description"
                 register={register("og_description", {
                   required: "og_description is required",
@@ -337,7 +342,7 @@ function UpdateSection({
               />
               <FormInput
                 id="og_url"
-                label="og_url:"
+                label="Og-Url:"
                 placeholder="Enter og_url"
                 register={register("og_image", {
                   required: "og_image is required",
@@ -351,7 +356,7 @@ function UpdateSection({
 
         {/* right section  */}
         <div>
-         <ImgUploadSection />
+          <ImgUploadSection />
         </div>
       </div>
 

@@ -4,11 +4,13 @@ import Layout from "./pages/Layout"
 import AddBlog from "./pages/AddBlog"
 import Blogs from "./pages/Blogs"
 import Blog from "./pages/Blog"
+import { ToastContainer } from "react-toastify"
 
 function App() {
  
  
   return (
+    <>
      <Routes> 
         <Route path="/" element={<Layout />}>
           <Route index path="/" element={ <AddBlog /> } />
@@ -18,6 +20,8 @@ function App() {
         </Route>
         <Route path="*" element={<AddBlog />} />
      </Routes>
+     <ToastContainer />
+    </>
   )
 }
 

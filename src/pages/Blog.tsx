@@ -6,6 +6,7 @@ import { BlogPost } from "./Blogs";
 import UpdateSection from "../components/UpdateSection";
 import { category } from "./AddBlog";
 import Button from "../components/ui/Button";
+import { Loader } from "../assets/Icons/icons";
 
 function Blog() {
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,7 @@ function Blog() {
 
   return (
     <div>
-      {loading && <p>loading</p>}
+      {loading &&  <Loader className=" h-8 w-8 "  /> }
       {!loading && blog && (
         <>
           <div className="w-full flex justify-center ">
@@ -56,6 +57,7 @@ function Blog() {
        
         </>
       )}
+      
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import apiClient from "../../api/apiClient";
 import { blogRoutes } from "../../api/urls";
 
@@ -7,7 +8,7 @@ export async function uploadImg( file : File ){
     formData.append('Image', file);
     const response = await apiClient.post(blogRoutes.uploadImage , formData)
     if(response.status ==false){
-      alert(response.message);
+      toast.error(response.error);
       return;
     }
     return Promise.resolve(response.data);
@@ -50,10 +51,10 @@ export function addBlog( blog : BlogFormData ){
         });
 
         if(response.status === false){
-          alert(response.error);
+          toast.error(response.error);
           return;
         }
-        alert("category added successfully");
+        toast.success("category added successfully");
       }
     } catch (err) {
       console.log(err);

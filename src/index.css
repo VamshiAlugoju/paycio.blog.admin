@@ -11,7 +11,9 @@ html {
    overflow-x: hidden;
 }
  
-
+p{
+   margin: 0;
+}
 
 /* Remove default margin and padding */
 /* body,   p, ol, ul, dl, figure {

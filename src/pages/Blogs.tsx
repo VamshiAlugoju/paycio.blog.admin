@@ -5,6 +5,8 @@ import Dropdown from "../components/DropDown";
 import Button from "../components/ui/Button";
 import { category } from "./AddBlog";
 import { useNavigate } from "react-router";
+import { Loader } from "../assets/Icons/icons";
+import { toast } from "react-toastify";
 
 export interface BlogPost {
   _id: string;
@@ -31,16 +33,19 @@ function Blogs() {
   const [categories, setCategories] = useState<category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   // const [filterdBlogs, setFilterdBlogs] = useState<BlogPost[]>([]);
-
+  const [loading ,setLoading] = useState(true);
   const value = useDebounce(searchTerm, 300);
 
   const navigate = useNavigate();
   async function getAllBlogs() {
     try {
+      setLoading(true);
       const response = await apiClient.get(blogRoutes.getAllBlogs);
       setBlogs(response.blogs);
     } catch (err) {
       console.log(err);
+    }finally{
+      setLoading(false);
     }
   }
 
@@ -49,14 +54,19 @@ function Blogs() {
       await getAllBlogs();
       return;
     }
-
     try {
       const response = await apiClient.get(
-        blogRoutes.getBlogsByCategory + categoryName
+        blogRoutes.getBlogsByCategory  , {params : {categories : categoryName}}
       );
-      setBlogs(response.blogs);
+      if( response &&  !response.status){
+        toast.error(response.message , {})
+        return;
+      }
+      setBlogs(response.data);
     } catch (err) {
       console.log(err);
+    }finally{
+      setLoading(false)
     }
   }
 
@@ -92,6 +102,7 @@ function Blogs() {
       />
       <div>
         <div className="flex flex-col gap-1 justify-center items-center ">
+        {loading ? <Loader className=" h-8 w-8 text-black " fill="#000000" /> :   <>
           {filteredBlogs.length === 0 ? (
             <p className="text-slate-800 text-sm mt-4 "> No Blogs found </p>
           ) : (
@@ -99,14 +110,15 @@ function Blogs() {
               {filteredBlogs.map((blog) => {
                 return (
                   <BlogItem
-                    key={blog.slug}
-                    blog={blog}
-                    handleBlogClick={handleBlogClick}
+                  key={blog.slug}
+                  blog={blog}
+                  handleBlogClick={handleBlogClick}
                   />
                 );
               })}
             </>
           )}
+          </> }   
         </div>
       </div>
     </div>
@@ -179,7 +191,7 @@ function BlogItem({ blog, handleBlogClick }: BlogItemProps) {
       }}
       onClick={() => handleBlogClick(blog)}
     >
-      <span className=" w-14 h-14 ">
+      <span className=" w-14 h-14 flex-shrink-0 ">
         <img
           src={blog.featured_img}
           alt={blog.title}
@@ -190,7 +202,7 @@ function BlogItem({ blog, handleBlogClick }: BlogItemProps) {
         <p className="font-semibold text-black text-sm  "> {blog.title} </p>
         <p className="text-xs text-slate-400 truncate w-[90%] ">
           {" "}
-          {blog.description}{" "}
+          {blog.meta_desc}{" "}
         </p>
       </div>
     </div>

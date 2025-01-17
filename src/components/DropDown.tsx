@@ -3,12 +3,23 @@ import React, { useState } from "react";
 type DropdownProps = {
   options: string[];
   onSelect: (selected: string) => void;
+  defaultOption?: string;
+  disabled?: boolean;
 };
 
-export default function Dropdown({ options, onSelect }: DropdownProps) {
+export default function Dropdown({
+  options,
+  onSelect,
+  defaultOption,
+  disabled,
+}: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("");
-  const toggleDropdown = () => setIsOpen(!isOpen);
+  const [selectedOption, setSelectedOption] = useState(defaultOption || "");
+  const toggleDropdown = () => {
+    if (!disabled) {
+      setIsOpen(!isOpen);
+    }
+  };
 
   const handleSelect = (option: string) => {
     setSelectedOption(option);
@@ -40,7 +51,6 @@ export default function Dropdown({ options, onSelect }: DropdownProps) {
                 </span>
               </li>
             ))}
-           
           </ul>
         </div>
       )}

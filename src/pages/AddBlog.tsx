@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import Dropdown from "../components/DropDown";
@@ -12,6 +12,7 @@ import { BlogFormData, createCategory } from "../lib/utils/blog.lib";
 import ImgUploadSection from "../components/ImgUploadSection";
 import FormInput from "../components/FormInput";
 import slugify from "slugify";
+import { toast } from "react-toastify";
 
 export type category = {
   name: string;
@@ -59,15 +60,15 @@ function AddBlog() {
   const onSubmit = async (data: BlogFormData) => {
     try {
       if (selectedCategory === "") {
-        alert("select category");
+        toast.error("Select a category")
         return;
       }
       const createBlogPayload = {
         title: data.title,
-        description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
+        // description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
         body: content,
         slug: data.slug,
-        author: "John Doe",
+        author: "Paycio Team",
         meta_title: data.metaTitle,
         meta_desc: data.metaDescription,
         meta_keywords: data.metaKeywords,
@@ -86,11 +87,11 @@ function AddBlog() {
       );
 
       if (response && response.status === false) {
-        alert(response.error);
+       toast.error(response.error)
         return;
       }
-      alert("added blog successfully");
-      reset();
+      toast.success("added blog successfully");
+      // reset();
     } catch (err) {
       console.log(err);
     }
@@ -110,7 +111,7 @@ function AddBlog() {
       const response = await apiClient.get(blogRoutes.getAllCategories);
 
       if (response && response.status === false) {
-        alert("cannot get categories");
+        toast.error("cannot get categories");
         return;
       }
       setCategories(response.categories);
@@ -222,7 +223,7 @@ function AddBlog() {
 
           {/* categories list  */}
           <div className="flex items-center gap-4 my-2 ">
-            <div className="mt-2">
+            <div className="mt-2 w-80 px-3 ">
               <label className="" htmlFor="">
                 {" "}
                 Categories :{" "}
@@ -270,7 +271,7 @@ function AddBlog() {
                   setTagInput(e.target.value);
                 }}
                 onKeyDown={(e) => {
-                  console.log(e.key);
+                  
                   if (e.key === "Enter") {
                     addTag(tagInput);
                   }
@@ -352,7 +353,7 @@ function AddBlog() {
             <div className="flex gap-4 items-center flex-wrap  ">
               <FormInput
                 id="og_title"
-                label="og_title:"
+                label="Og-Title:"
                 placeholder="Enter og_title"
                 register={register("og_title", {
                   required: "og_title is required",
@@ -361,7 +362,7 @@ function AddBlog() {
               />
               <FormInput
                 id="og_description"
-                label="og_description:"
+                label="Og-Description:"
                 placeholder="Enter og_description"
                 register={register("og_description", {
                   required: "og_description is required",
@@ -375,7 +376,7 @@ function AddBlog() {
               />
               <FormInput
                 id="og_url"
-                label="og_url:"
+                label="Og-Url:"
                 placeholder="Enter og_url"
                 register={register("og_url", {
                   required: "og_url is required",
