@@ -9,6 +9,7 @@ function Button({ children, onClick, className ,disabled }: any) {
         "bg-white p-1 outline-none border border-black rounded-md  ",{ "cursor-pointer" : !disabled }, 
         className
       )}
+      style={{ borderColor: "transparent" }}
     >
       {" "}
       {children}{" "}

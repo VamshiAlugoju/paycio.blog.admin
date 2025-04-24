@@ -8,11 +8,16 @@ import apiClient from "../api/apiClient";
 import { blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
-import { BlogFormData, createCategory } from "../lib/utils/blog.lib";
+import {
+  BlogFormData,
+  createCategory,
+  uploadBlog,
+} from "../lib/utils/blog.lib";
 import ImgUploadSection from "../components/ImgUploadSection";
 import FormInput from "../components/FormInput";
 import slugify from "slugify";
 import { toast } from "react-toastify";
+import { Loader } from "../assets/Icons/icons";
 
 export type category = {
   name: string;
@@ -21,17 +26,18 @@ export type category = {
 const initialFormData: BlogFormData = {
   slug: "",
   title: "",
-  description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
-  featuredImage: "",
+  featured_img: "",
   body: "",
   category: "",
   tags: "",
-  metaTitle: "",
-  metaDescription: "",
-  og_url: "",
+  meta_title: "",
+  meta_desc: "",
+  og_image: "",
   og_title: "",
   og_description: "",
-  metaKeywords: "",
+  meta_keywords: "",
+  status: "active",
+  author: "Paycio Team",
 };
 
 function AddBlog() {
@@ -43,6 +49,14 @@ function AddBlog() {
   const [content, setContent] = useState<string>("");
   const [selectedCategory, setSelctedCategory] = useState("");
   const [tabelOfContents, setTableOfcontents] = useState<string[]>([]);
+  const [loadingStatus, setLoadingStatus] = useState<{
+    status: boolean;
+    type: "upload" | "draft" | null;
+  }>({
+    status: false,
+    type: null,
+  });
+
   const {
     register,
     handleSubmit,
@@ -50,50 +64,73 @@ function AddBlog() {
     reset,
     watch,
     setValue,
+    getValues,
+    trigger,
+    setFocus,
   } = useForm<BlogFormData>({ defaultValues: initialFormData });
   const title = watch("title");
-
   function setFieldValue(fieldName: string, value: string) {
     setContent(value);
   }
 
   const onSubmit = async (data: BlogFormData) => {
     try {
+      setLoadingStatus({
+        status: true,
+        type: "upload",
+      });
       if (selectedCategory === "") {
-        toast.error("Select a category")
+        toast.error("Select a category");
         return;
       }
+
       const createBlogPayload = {
-        title: data.title,
-        // description: "fksdlkfjs;lkfjslkdjf;lksdjfsldk;fjsl;kdjfsl;dkfjs;ldkfj;sdlkjcisdl;jfw'elfjsl;fksdjcsdl;kfjsdl;kfj",
-        body: content,
-        slug: data.slug,
-        author: "Paycio Team",
-        meta_title: data.metaTitle,
-        meta_desc: data.metaDescription,
-        meta_keywords: data.metaKeywords,
+        ...data,
         category: selectedCategory,
         tags: tags,
-        featured_img: data.featuredImage,
-        og_image: data.og_url,
-        og_title: data.og_title,
-        og_description: data.og_description,
+        body: content,
         section_ids: tabelOfContents,
       };
 
-      const response = await apiClient.post(
-        blogRoutes.createBlog,
-        createBlogPayload
-      );
-
-      if (response && response.status === false) {
-       toast.error(response.error)
-        return;
-      }
-      toast.success("added blog successfully");
+      await uploadBlog(createBlogPayload);
       // reset();
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoadingStatus({
+        status: false,
+        type: null,
+      });
+    }
+  };
+
+  const draftBlog = async (data: BlogFormData) => {
+    try {
+      setLoadingStatus({
+        status: true,
+        type: "draft",
+      });
+      if (selectedCategory === "") {
+        toast.error("Select a category");
+        return;
+      }
+      const createBlogPayload = {
+        ...data,
+        category: selectedCategory,
+        tags: tags,
+        body: content,
+        section_ids: tabelOfContents,
+        status: "drafted",
+      };
+
+      await uploadBlog(createBlogPayload);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoadingStatus({
+        status: false,
+        type: null,
+      });
     }
   };
 
@@ -185,10 +222,10 @@ function AddBlog() {
               id="featuredImage"
               label="Featured Image:"
               placeholder="Enter Feature Image Url"
-              register={register("featuredImage", {
+              register={register("featured_img", {
                 required: "Image url is required",
               })}
-              error={errors.featuredImage}
+              error={errors.featured_img}
             />
           </div>
           <div className="flex items-start gap-4  ">
@@ -271,7 +308,6 @@ function AddBlog() {
                   setTagInput(e.target.value);
                 }}
                 onKeyDown={(e) => {
-                  
                   if (e.key === "Enter") {
                     addTag(tagInput);
                   }
@@ -310,25 +346,25 @@ function AddBlog() {
                 id="metaTitle"
                 label="Meta-Title:"
                 placeholder=" Enter meta title"
-                register={register("metaTitle", {
+                register={register("meta_title", {
                   required: "MetaTitle is required",
                 })}
-                error={errors.metaTitle}
+                error={errors.meta_title}
               />
 
               <FormInput
                 id="metaDescription"
                 label="Meta-Description:"
                 placeholder=" Enter meta description"
-                register={register("metaDescription", {
+                register={register("meta_desc", {
                   required: "MetaDescription is required",
                   minLength: {
-                    value: 10,
+                    value: 30,
                     message:
-                      "og_description must be at least 10 characters long",
+                      "og_description must be at least 30 characters long",
                   },
                 })}
-                error={errors.metaDescription}
+                error={errors.meta_desc}
               />
               <div className=" flex gap-2">
                 <div>
@@ -337,14 +373,14 @@ function AddBlog() {
                   </label>
                   <textarea
                     className=" block w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100   "
-                    {...register("metaKeywords", {
+                    {...register("meta_keywords", {
                       required: "metaKeywords is required",
                     })}
-                    placeholder="Enter meta keywords "
+                    placeholder="Enter meta keywords"
                   />
-                  {errors.metaKeywords && (
+                  {errors.meta_keywords && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.metaKeywords.message}
+                      {errors.meta_keywords.message}
                     </p>
                   )}
                 </div>
@@ -367,9 +403,9 @@ function AddBlog() {
                 register={register("og_description", {
                   required: "og_description is required",
                   minLength: {
-                    value: 10,
+                    value: 30,
                     message:
-                      "og_description must be at least 10 characters long",
+                      "og_description must be at least 30 characters long",
                   },
                 })}
                 error={errors.og_description}
@@ -378,10 +414,10 @@ function AddBlog() {
                 id="og_url"
                 label="Og-Url:"
                 placeholder="Enter og_url"
-                register={register("og_url", {
+                register={register("og_image", {
                   required: "og_url is required",
                 })}
-                error={errors.og_url}
+                error={errors.og_image}
               />
             </div>
           </div>
@@ -402,12 +438,26 @@ function AddBlog() {
           addTableOfContent={addTableOfContent}
         />
       </div>
-      <div>
+      <div className="flex gap-4 items-center w-full justify-center ">
         <Button
           onClick={handleSubmit(onSubmit)}
           className="bg-black p-4 py-2 rounded-md mt-4 text-white "
         >
-          Submit
+          {loadingStatus.status && loadingStatus.type === "upload" ? (
+            <Loader className="w-4 h-4" />
+          ) : (
+            "Submit"
+          )}
+        </Button>
+        <Button
+          onClick={handleSubmit(draftBlog)}
+          className="bg-black p-4 py-2 rounded-md mt-4 text-white "
+        >
+          {loadingStatus.status && loadingStatus.type === "draft" ? (
+            <Loader className="w-4 h-4" />
+          ) : (
+            "Add to Drafts"
+          )}
         </Button>
       </div>
       <div className="h-12"></div>

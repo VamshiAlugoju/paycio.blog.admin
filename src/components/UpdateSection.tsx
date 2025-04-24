@@ -18,6 +18,7 @@ import { BlogPost } from "../pages/Blogs";
 import { cn } from "../lib/utils/cn";
 import ImgUploadSection from "./ImgUploadSection";
 import { toast } from "react-toastify";
+import { updateBlog } from "../lib/utils/blog.lib";
 
 export type category = {
   name: string;
@@ -53,17 +54,22 @@ function UpdateSection({
     featured_img: blog.featured_img,
     og_image: blog.og_image,
     og_title: blog.og_title,
+    status: blog.status,
     og_description: blog.og_description,
     createdAt: blog.createdAt,
     updatedAt: blog.updatedAt,
+    section_ids: blog.section_ids,
+    jsonLd: blog.jsonLd,
   };
 
   const [newCategory, setNewCateogory] = useState("");
   const [tags, setTags] = useState<string[]>(blog.tags || []);
   const [tagInput, setTagInput] = useState("");
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [content, setContent] = useState<string>(blog.body);
   const [selectedCategory, setSelctedCategory] = useState(blog.category);
+  const [tabelOfContents, setTableOfcontents] = useState<string[]>(
+    blog.section_ids || []
+  );
 
   function setFieldValue(fieldName: string, value: string) {
     setContent(value);
@@ -74,11 +80,19 @@ function UpdateSection({
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<BlogPost>({ defaultValues: blogInitialData });
 
   function removeTags(idx: number) {
     if (!isEditable) return;
     setTags((prev) => {
+      return prev.filter((tag, index) => index !== idx);
+    });
+  }
+
+  function removeTableOfContent(idx: number) {
+    if (!isEditable) return;
+    setTableOfcontents((prev) => {
       return prev.filter((tag, index) => index !== idx);
     });
   }
@@ -90,38 +104,29 @@ function UpdateSection({
 
   const onSubmit = async (data: BlogPost) => {
     try {
+      const { _id, createdAt, updatedAt, ...rest } = data;
+
       const updateBlogPayload = {
-        title: data.title,
-        description: data.description,
+        ...rest,
         body: content,
-        slug: data.slug,
         author: "John Doe",
-        meta_title: data.meta_title,
-        meta_desc: data.meta_desc,
-        meta_keywords: data.meta_keywords,
         category: selectedCategory,
         tags: tags,
-        featured_img: data.featured_img,
-        og_image: data.og_image,
-        og_title: data.og_title,
-        og_description: data.og_description,
+        section_ids: tabelOfContents,
       };
-      const response = await apiClient.post(
-        blogRoutes.updateBlog + data.slug,
-        updateBlogPayload
-      );
-      if (!response.status) {
-        toast.error(response.message);
-        return;
-      }
+
+      const response = await updateBlog(updateBlogPayload, data._id);
 
       setBlog(response.blog);
       setIsEditable(false);
-      toast.success("Blog updated successfully");
     } catch (err) {
       console.log(err);
     }
   };
+
+  function addTableOfContent(id: string) {
+    setTableOfcontents((prev) => [...prev, id]);
+  }
 
   async function addCategory() {
     try {
@@ -184,6 +189,24 @@ function UpdateSection({
             />
           </div>
           <div className="flex items-start gap-4">
+            <div className="w-80   p-2 px-3 ">
+              <p className=" m-0 p-0 ">Table of Contents :</p>
+              <div className="flex items-center max-w-72 flex-wrap gap-1 ">
+                {tabelOfContents.length === 0 ? (
+                  <p className="m-0 text-xs "> No table of Contents</p>
+                ) : (
+                  <>
+                    {tabelOfContents.map((content, idx) => (
+                      <TagItem
+                        key={idx}
+                        tagName={content}
+                        onRemove={() => removeTableOfContent(idx)}
+                      />
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
             <FormInput
               id="slug"
               label="Slug:"
@@ -313,6 +336,26 @@ function UpdateSection({
                 error={errors.meta_desc}
                 disabled={!isEditable}
               />
+              <div className=" flex gap-2">
+                <div>
+                  <label className="text-gray-600 dark:text-gray-400">
+                    Meta Keywords:
+                  </label>
+                  <textarea
+                    className=" block w-80 max-w-52 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100  no-scrollbar "
+                    {...register("meta_keywords", {
+                      required: "metaKeywords is required",
+                    })}
+                    placeholder="Enter meta keywords"
+                    disabled={!isEditable}
+                  />
+                  {errors.meta_keywords && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.meta_keywords.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex gap-4 items-center flex-wrap  ">
               <FormInput
@@ -332,9 +375,9 @@ function UpdateSection({
                 register={register("og_description", {
                   required: "og_description is required",
                   minLength: {
-                    value: 10,
+                    value: 30,
                     message:
-                      "og_description must be at least 10 characters long",
+                      "og_description must be at least 30 characters long",
                   },
                 })}
                 error={errors.og_description}
@@ -350,6 +393,24 @@ function UpdateSection({
                 error={errors.og_image}
                 disabled={!isEditable}
               />
+              <div className=" flex gap-2 w-14 ">
+                <div>
+                  <label className="text-gray-600 dark:text-gray-400">
+                    Json-Ld :
+                  </label>
+                  <textarea
+                    className=" block max-w-80 w-80 py-3 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 no-scrollbar   "
+                    {...register("jsonLd", {
+                      required: false,
+                    })}
+                    placeholder="JSON-LD markup "
+                    disabled={!isEditable}
+                  />
+                  {errors.meta_keywords && (
+                    <p className="text-red-500 text-sm mt-1">{"helloe"}</p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -368,23 +429,41 @@ function UpdateSection({
           setFieldValue={setFieldValue}
           initialContent={blog.body}
           editable={!isEditable}
+          addTableOfContent={addTableOfContent}
         />
       </div>
 
       <div className="mt-4">
         {!isEditable && (
-          <Button
-            onClick={() => setIsEditable(!isEditable)}
-            className="bg-black p-4 py-2 rounded-md  text-white "
-          >
-            Edit
-          </Button>
+          <>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => setIsEditable(!isEditable)}
+                className="bg-black p-4 py-2 rounded-md  text-white "
+              >
+                Edit
+              </Button>
+              {blog.status === "drafted" && (
+                <Button
+                  onClick={() => {
+                    setValue("status", "active");
+                    handleSubmit(onSubmit)();
+                  }}
+                  className="bg-green-400 border-none p-4 py-2 rounded-md  text-black "
+                >
+                  Post Drafted Blog
+                </Button>
+              )}
+            </div>
+          </>
         )}
 
         {isEditable && (
           <div className=" flex items-center gap-2">
             <Button
-              onClick={handleSubmit(onSubmit)}
+              onClick={() => {
+                handleSubmit(onSubmit)();
+              }}
               className="bg-green-400 p-4 py-2 rounded-md  text-black border-none "
             >
               Submit

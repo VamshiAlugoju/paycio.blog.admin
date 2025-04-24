@@ -13,9 +13,8 @@ function Blog() {
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [isEditable, setIsEditable] = useState(false);
   const [categories, setCategories] = useState<category[]>([]);
-  
+
   const params = useParams();
-  
 
   async function getBlogBySlug(Slug: string) {
     try {
@@ -41,7 +40,7 @@ function Blog() {
 
   return (
     <div>
-      {loading &&  <Loader className=" h-8 w-8 "  /> }
+      {loading && <Loader className=" h-8 w-8 " />}
       {!loading && blog && (
         <>
           <div className="w-full flex justify-center ">
@@ -53,11 +52,8 @@ function Blog() {
               setBlog={setBlog}
             />
           </div>
-          
-       
         </>
       )}
-      
     </div>
   );
 }

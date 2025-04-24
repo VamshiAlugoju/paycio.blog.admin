@@ -22,24 +22,53 @@ export async function uploadImg( file : File ){
   slug: string;
   title: string;
   description?: string;
-  featuredImage: string;
+  featured_img: string;
   body: string;
   category: string;
   tags: string;
-  metaTitle: string;
-  metaDescription: string;
-  og_url: string;
+  meta_title: string;
+  meta_desc: string;
+  og_image: string;
   og_title: string;
   og_description: string;
-  metaKeywords: string;
+  meta_keywords: string;
+  status : "active" | "drafted";
+  author : "Paycio Team";
 };
 
 
-export function addBlog( blog : BlogFormData ){
+export  async function uploadBlog( payload: any  ){
   try{
+      const response = await apiClient.post(
+        blogRoutes.createBlog,
+        payload
+      );
 
+      if (response && response.status === false) {
+        toast.error(response.error);
+        return;
+      }
+      toast.success("added blog successfully");
+      return Promise.resolve(response.data);
   }catch(err){
+    return Promise.reject(err);
+  }
+}
 
+export async function updateBlog(payload : any , id : string ){
+  try{
+    const response = await apiClient.post(
+        blogRoutes.updateBlog + id,
+        payload
+      );
+      if (!response.status) {
+        toast.error(response.message);
+        return;
+      }
+      toast.success("Blog updated successfully");
+    return Promise.resolve(response);
+  }catch(err){
+    return Promise.reject(err)
   }
 }
 
@@ -57,6 +86,50 @@ export function addBlog( blog : BlogFormData ){
         toast.success("category added successfully");
       }
     } catch (err) {
+      console.log(err);
+    }
+  }
+
+
+  export async function getDrafts(){
+    try{
+      const response = await apiClient.get(blogRoutes.getDrafts);
+      if(response.status === false){
+        toast.error(response.error);
+        return;
+      }
+      return Promise.resolve(response.data);
+    }catch(err){
+      console.log(err);
+      return Promise.reject(err);
+    }
+  }
+ 
+
+  export async function  getActiveBlogs() {
+    try {
+      const response = await apiClient.get(blogRoutes.getActiveBlogs);
+      if(response.status === false){
+        toast.error(response.error);
+        return;
+      }
+      return Promise.resolve(response.data);
+    } catch (err) {
+      console.log(err);
+      return Promise.reject(err);
+    }
+  }
+
+
+  export async function deleteBlog(slug : string) {
+    try { 
+      const response = await apiClient.delete(blogRoutes.deleteBlog+slug );
+      if(response.status === false){
+        toast.error(response.error);
+        return;
+      }
+      toast.success("Blog deleted successfully");
+    } catch (err) { 
       console.log(err);
     }
   }

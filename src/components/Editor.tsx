@@ -34,8 +34,9 @@ const Editor: React.FC<EditorProps> = ({
           selection?.anchorNode?.nodeType === 3
             ? selection.anchorNode.parentNode
             : selection?.anchorNode;
-        const validId = purifyId(value);
+        const validId = purifyId(value).substring(0,30);
         selectedNode.id = validId;
+
         addTableOfContent && addTableOfContent(validId);
       }
     },
