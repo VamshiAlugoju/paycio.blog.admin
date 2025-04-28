@@ -9,6 +9,7 @@ import { blogRoutes } from "../api/urls";
 import Button from "../components/ui/Button";
 import TagItem from "../components/ui/TagItem";
 import {
+  addSubCategoryApi,
   BlogFormData,
   createCategory,
   uploadBlog,
@@ -21,6 +22,7 @@ import { Loader } from "../assets/Icons/icons";
 
 export type category = {
   name: string;
+  sub_categories: string[];
 };
 
 const initialFormData: BlogFormData = {
@@ -38,16 +40,20 @@ const initialFormData: BlogFormData = {
   meta_keywords: "",
   status: "active",
   author: "Paycio Team",
+  sub_category: "",
 };
 
 function AddBlog() {
   const [categories, setCategories] = useState<category[]>([]);
-
+  const [newSubcategory, setNewSubCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [newCategory, setNewCateogory] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState<string>("");
-  const [selectedCategory, setSelctedCategory] = useState("");
+  const [selectedCategory, setSelctedCategory] = useState<category | null>(
+    null
+  );
   const [tabelOfContents, setTableOfcontents] = useState<string[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<{
     status: boolean;
@@ -79,17 +85,22 @@ function AddBlog() {
         status: true,
         type: "upload",
       });
-      if (selectedCategory === "") {
+      if (selectedCategory === null) {
         toast.error("Select a category");
+        return;
+      }
+      if (selectedSubCategory === "") {
+        toast.error("Select a sub category");
         return;
       }
 
       const createBlogPayload = {
         ...data,
-        category: selectedCategory,
+        category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
+        sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -110,17 +121,22 @@ function AddBlog() {
         status: true,
         type: "draft",
       });
-      if (selectedCategory === "") {
+      if (selectedCategory === null) {
         toast.error("Select a category");
+        return;
+      }
+      if (selectedSubCategory === "") {
+        toast.error("Select a sub category");
         return;
       }
       const createBlogPayload = {
         ...data,
-        category: selectedCategory,
+        category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
         status: "drafted",
+        sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -154,6 +170,19 @@ function AddBlog() {
       setCategories(response.categories);
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async function addSubCategory() {
+    if (selectedCategory) {
+      const category = await addSubCategoryApi(
+        selectedCategory?.name,
+        newSubcategory
+      );
+      console.log(category);
+      setSelctedCategory(category);
+      setNewSubCategory("");
+      await getCategories();
     }
   }
 
@@ -267,7 +296,10 @@ function AddBlog() {
               </label>
               <Dropdown
                 onSelect={(option) => {
-                  setSelctedCategory(option);
+                  const category = categories.find(
+                    (val) => val.name === option
+                  );
+                  category && setSelctedCategory(category);
                 }}
                 options={categories.map((items) => items.name)}
               />
@@ -294,6 +326,46 @@ function AddBlog() {
               </button>
             </div>
           </div>
+          {selectedCategory && (
+            <div className="flex items-center gap-4 my-2 ">
+              <div className="mt-2 w-80 px-3 ">
+                <label className="" htmlFor="">
+                  {" "}
+                  Sub Category :{" "}
+                </label>
+                <Dropdown
+                  onSelect={(option) => {
+                    // setSelctedCategory(option);
+                    setSelectedSubCategory(option);
+                  }}
+                  options={selectedCategory.sub_categories?.map(
+                    (items) => items
+                  )}
+                />
+              </div>
+
+              {/* // add sub cateogory  */}
+              <div className="flex items-center gap-2 ">
+                <input
+                  type=""
+                  className="border p-1 rounded-md "
+                  placeholder="Sub Category"
+                  value={newSubcategory}
+                  onChange={(e) => {
+                    setNewSubCategory(e.target.value);
+                  }}
+                />
+                <button
+                  disabled={newSubcategory.length === 0}
+                  className="bg-black text-white p-1 px-2 outline-none border border-black rounded-md cursor-pointer "
+                  onClick={addSubCategory}
+                >
+                  {" "}
+                  Add SubCategory{" "}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* tags  */}
           <div className="flex flex-col gap-3 mt-4 ">

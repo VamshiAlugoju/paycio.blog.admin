@@ -24,6 +24,7 @@ export interface BlogPost {
   meta_keywords: string;
   jsonLd?: string;
   category: string;
+  sub_category ?:string;
   tags: string[];
   featured_img: string;
   og_image: string;

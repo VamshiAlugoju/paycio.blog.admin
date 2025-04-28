@@ -18,10 +18,11 @@ import { BlogPost } from "../pages/Blogs";
 import { cn } from "../lib/utils/cn";
 import ImgUploadSection from "./ImgUploadSection";
 import { toast } from "react-toastify";
-import { updateBlog } from "../lib/utils/blog.lib";
+import { addSubCategoryApi, updateBlog } from "../lib/utils/blog.lib";
 
 export type category = {
   name: string;
+  sub_categories: string[];
 };
 
 type BlogData = {
@@ -50,6 +51,7 @@ function UpdateSection({
     meta_desc: blog.meta_desc,
     meta_keywords: blog.meta_keywords,
     category: blog.category,
+    sub_category: blog.sub_category,
     tags: blog.tags,
     featured_img: blog.featured_img,
     og_image: blog.og_image,
@@ -66,10 +68,17 @@ function UpdateSection({
   const [tags, setTags] = useState<string[]>(blog.tags || []);
   const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState<string>(blog.body);
-  const [selectedCategory, setSelctedCategory] = useState(blog.category);
+  const [selectedCategory, setSelctedCategory] = useState<category | null>(
+    categories.find((category) => category.name === blog.category) || null
+  );
   const [tabelOfContents, setTableOfcontents] = useState<string[]>(
     blog.section_ids || []
   );
+  const [subCategoryState, setSubCategoriesState] = useState({
+    selectedSubCategory: blog.sub_category,
+    subCategories: [],
+    newSubCategory: "",
+  });
 
   function setFieldValue(fieldName: string, value: string) {
     setContent(value);
@@ -110,9 +119,10 @@ function UpdateSection({
         ...rest,
         body: content,
         author: "John Doe",
-        category: selectedCategory,
+        category: selectedCategory?.name,
         tags: tags,
         section_ids: tabelOfContents,
+        sub_category: subCategoryState.selectedSubCategory,
       };
 
       const response = await updateBlog(updateBlogPayload, data._id);
@@ -145,6 +155,28 @@ function UpdateSection({
       console.log(err);
     }
   }
+
+  async function addSubCategory() {
+    if (!subCategoryState.selectedSubCategory) {
+      toast.error("sub category couldn't be empty");
+      return;
+    }
+    if (!selectedCategory) {
+      toast.error("category couldn't be empty");
+      return;
+    }
+    await addSubCategoryApi(
+      selectedCategory?.name,
+      subCategoryState.selectedSubCategory
+    );
+    setSubCategoriesState((prev) => ({ ...prev, newSubCategory: "" }));
+  }
+
+  useEffect(() => {
+    setSelctedCategory(
+      categories.find((category) => category.name === blog.category) || null
+    );
+  }, [categories]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -227,7 +259,16 @@ function UpdateSection({
               </label>
               <Dropdown
                 onSelect={(option) => {
-                  setSelctedCategory(option);
+                  const category = categories.find(
+                    (val) => val.name === option
+                  );
+                  if (category) {
+                    setSelctedCategory(category);
+                    setSubCategoriesState((prev) => ({
+                      ...prev,
+                      selectedSubCategory: "",
+                    }));
+                  }
                 }}
                 options={categories.map((items) => items.name)}
                 disabled={!isEditable}
@@ -257,6 +298,51 @@ function UpdateSection({
               >
                 {" "}
                 Add category{" "}
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 my-2 ">
+            <div className="mt-2 w-80 px-3 ">
+              <label className="" htmlFor="">
+                {" "}
+                Sub Category :{" "}
+              </label>
+              <Dropdown
+                onSelect={(option) => {
+                  setSubCategoriesState((prev) => ({
+                    ...prev,
+                    selectedSubCategory: option,
+                  }));
+                }}
+                options={
+                  selectedCategory?.sub_categories.map((items) => items) || []
+                }
+                defaultOption={subCategoryState.selectedSubCategory}
+                disabled={!isEditable}
+              />
+            </div>
+
+            {/* // add sub cateogory  */}
+            <div className="flex items-center gap-2 ">
+              <input
+                type=""
+                className="border p-1 rounded-md "
+                placeholder="Sub Category"
+                value={subCategoryState.newSubCategory}
+                onChange={(e) => {
+                  setSubCategoriesState((prev) => ({
+                    ...prev,
+                    newSubCategory: e.target.value,
+                  }));
+                }}
+              />
+              <button
+                disabled={newCategory.length === 0}
+                className="bg-black text-white p-1 px-2 outline-none border border-black rounded-md cursor-pointer "
+                onClick={addSubCategory}
+              >
+                {" "}
+                Add SubCategory{" "}
               </button>
             </div>
           </div>
