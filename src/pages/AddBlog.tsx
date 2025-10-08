@@ -30,7 +30,6 @@ const initialFormData: BlogFormData = {
   title: "",
   featured_img: "",
   body: "",
-  category: "",
   tags: "",
   meta_title: "",
   meta_desc: "",
@@ -40,7 +39,6 @@ const initialFormData: BlogFormData = {
   meta_keywords: "",
   status: "active",
   author: "Paycio Team",
-  sub_category: "",
 };
 
 function AddBlog() {
@@ -85,22 +83,22 @@ function AddBlog() {
         status: true,
         type: "upload",
       });
-      if (selectedCategory === null) {
-        toast.error("Select a category");
-        return;
-      }
-      if (selectedSubCategory === "") {
-        toast.error("Select a sub category");
-        return;
-      }
+      // if (selectedCategory === null) {
+      //   toast.error("Select a category");
+      //   return;
+      // }
+      // if (selectedSubCategory === "") {
+      //   toast.error("Select a sub category");
+      //   return;
+      // }
 
       const createBlogPayload = {
         ...data,
-        category: selectedCategory.name,
+        // category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
-        sub_category: selectedSubCategory,
+        // sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -121,22 +119,22 @@ function AddBlog() {
         status: true,
         type: "draft",
       });
-      if (selectedCategory === null) {
-        toast.error("Select a category");
-        return;
-      }
-      if (selectedSubCategory === "") {
-        toast.error("Select a sub category");
-        return;
-      }
+      // if (selectedCategory === null) {
+      //   toast.error("Select a category");
+      //   return;
+      // }
+      // if (selectedSubCategory === "") {
+      //   toast.error("Select a sub category");
+      //   return;
+      // }
       const createBlogPayload = {
         ...data,
-        category: selectedCategory.name,
+        // category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
         status: "drafted",
-        sub_category: selectedSubCategory,
+        // sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -288,7 +286,7 @@ function AddBlog() {
           </div>
 
           {/* categories list  */}
-          <div className="flex items-center gap-4 my-2 ">
+          <div className="hidden items-center gap-4 my-2 ">
             <div className="mt-2 w-80 px-3 ">
               <label className="" htmlFor="">
                 {" "}
@@ -327,7 +325,7 @@ function AddBlog() {
             </div>
           </div>
           {selectedCategory && (
-            <div className="flex items-center gap-4 my-2 ">
+            <div className="hidden items-center gap-4 my-2 ">
               <div className="mt-2 w-80 px-3 ">
                 <label className="" htmlFor="">
                   {" "}

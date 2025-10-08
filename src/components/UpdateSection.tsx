@@ -251,7 +251,7 @@ function UpdateSection({
           </div>
 
           {/* categories list  */}
-          <div className="flex items-center gap-4 my-2 ">
+          <div className="items-center gap-4 my-2 hidden">
             <div className="mt-2">
               <label className="" htmlFor="">
                 {" "}
@@ -301,7 +301,7 @@ function UpdateSection({
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-4 my-2 ">
+          <div className="items-center gap-4 my-2 hidden">
             <div className="mt-2 w-80 px-3 ">
               <label className="" htmlFor="">
                 {" "}

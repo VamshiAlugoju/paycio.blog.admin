@@ -24,8 +24,6 @@ export type BlogFormData = {
   description?: string;
   featured_img: string;
   body: string;
-  category: string;
-  sub_category?: string;
   tags: string;
   meta_title: string;
   meta_desc: string;
