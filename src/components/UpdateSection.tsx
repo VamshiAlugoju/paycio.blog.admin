@@ -119,10 +119,8 @@ function UpdateSection({
         ...rest,
         body: content,
         author: "John Doe",
-        category: selectedCategory?.name,
         tags: tags,
         section_ids: tabelOfContents,
-        sub_category: subCategoryState.selectedSubCategory,
       };
 
       const response = await updateBlog(updateBlogPayload, data._id);
