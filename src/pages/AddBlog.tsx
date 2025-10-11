@@ -575,12 +575,12 @@ function AddBlog() {
           <button
             type="button"
             onClick={async () => {
-              const isValid = await trigger("faq");
-              if (isValid) {
+              // const isValid = await trigger("faq");
+              // if (isValid) {
                 append({ question: "", answer: "" });
-              } else {
-                toast.error("Please fill all existing FAQs before adding a new one");
-              }
+              // } else {
+              //   toast.error("Please fill all existing FAQs before adding a new one");
+              // }
             }}
             className="p-1 mt-3 outline-none border border-black rounded-md cursor-pointer py-2 text-sm px-6 bg-black text-white"
           >

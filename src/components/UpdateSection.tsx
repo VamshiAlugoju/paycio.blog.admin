@@ -87,7 +87,7 @@ function UpdateSection({
     control,
     setValue,
     trigger, clearErrors
-  } = useForm<BlogPost>({ defaultValues: { ...blogInitialData, faq: blogInitialData.faq?.length ? blogInitialData.faq : [{ question: "", answer: "" }] } });
+  } = useForm<BlogPost>({ defaultValues: { ...blogInitialData, faq: blogInitialData.faq?.length != 0 ? blogInitialData.faq : [] } });
   const { fields, append, remove } = useFieldArray({
     control,
     name: "faq",
@@ -413,11 +413,11 @@ function UpdateSection({
                   <input className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
                     placeholder="Question" style={{ width: '-webkit-fill-available' }}
                     {...register(`faq.${index}.question`, {
-                      required: "Question is required",
-                      minLength: {
-                        value: MIN_QUESTION_LENGTH,
-                        message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
-                      },
+                      // required: "Question is required",
+                      // minLength: {
+                      //   value: MIN_QUESTION_LENGTH,
+                      //   message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
+                      // },
                     })}
                     onKeyUp={() => clearErrors(`faq.${index}.question`)}
                   />
@@ -432,11 +432,11 @@ function UpdateSection({
                   <textarea className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
                     placeholder="Answer" style={{ width: '-webkit-fill-available' }}
                     {...register(`faq.${index}.answer`, {
-                      required: "Answer is required",
-                      minLength: {
-                        value: MIN_ANSWER_LENGTH,
-                        message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
-                      },
+                      // required: "Answer is required",
+                      // minLength: {
+                      //   value: MIN_ANSWER_LENGTH,
+                      //   message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
+                      // },
                     })}
                     onKeyUp={() => clearErrors(`faq.${index}.answer`)}
                   />
@@ -458,12 +458,12 @@ function UpdateSection({
           <button
             type="button"
             onClick={async () => {
-              const isValid = await trigger("faq");
-              if (isValid) {
+              // const isValid = await trigger("faq");
+              // if (isValid) {
                 append({ question: "", answer: "" });
-              } else {
-                toast.error("Please fill all existing FAQs before adding a new one");
-              }
+              // } else {
+              //   toast.error("Please fill all existing FAQs before adding a new one");
+              // }
             }}
             className="p-1 mt-3 outline-none border border-black rounded-md cursor-pointer py-2 text-sm px-6 bg-black text-white"
           >
