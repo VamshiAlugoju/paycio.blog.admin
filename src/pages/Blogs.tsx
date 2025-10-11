@@ -8,7 +8,7 @@ import { useNavigate } from "react-router";
 import { Loader } from "../assets/Icons/icons";
 import { toast } from "react-toastify";
 import { Trash2 } from "lucide-react";
-import { deleteBlog } from "../lib/utils/blog.lib";
+import { deleteBlog, faqProps } from "../lib/utils/blog.lib";
 
 import Modal from "../components/utils/Modal";
 
@@ -23,8 +23,9 @@ export interface BlogPost {
   meta_desc: string;
   meta_keywords: string;
   jsonLd?: string;
-  category: string;
-  sub_category ?:string;
+  // category: string;
+  // sub_category ?:string;
+  faq  : faqProps[]
   tags: string[];
   featured_img: string;
   og_image: string;

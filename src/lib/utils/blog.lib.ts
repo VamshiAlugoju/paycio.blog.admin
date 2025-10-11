@@ -17,6 +17,10 @@ export async function uploadImg(file: File) {
     return Promise.reject(err);
   }
 }
+export type faqProps = {
+  question: string;
+  answer : string
+}
 
 export type BlogFormData = {
   slug: string;
@@ -31,6 +35,7 @@ export type BlogFormData = {
   og_title: string;
   og_description: string;
   meta_keywords: string;
+  faq: faqProps[]
   status: "active" | "drafted";
   author: "Paycio Team";
 };

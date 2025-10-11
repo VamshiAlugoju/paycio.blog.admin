@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 
 import Dropdown from "../components/DropDown";
 
@@ -12,6 +12,7 @@ import {
   addSubCategoryApi,
   BlogFormData,
   createCategory,
+  faqProps,
   uploadBlog,
 } from "../lib/utils/blog.lib";
 import ImgUploadSection from "../components/ImgUploadSection";
@@ -37,6 +38,7 @@ const initialFormData: BlogFormData = {
   og_title: "",
   og_description: "",
   meta_keywords: "",
+  faq: [{ question: "", answer: "" }],
   status: "active",
   author: "Paycio Team",
 };
@@ -60,6 +62,17 @@ function AddBlog() {
     status: false,
     type: null,
   });
+  const MAX_FAQS = 4;
+  const [faqs, setFaqs] = useState<faqProps[]>([
+    { question: "", answer: "" }, // show one by default
+  ]);
+
+
+  const MIN_QUESTION_LENGTH = 10; // minimum characters for question
+  const MIN_ANSWER_LENGTH = 20;   // minimum characters for answer
+
+
+
 
   const {
     register,
@@ -71,34 +84,37 @@ function AddBlog() {
     getValues,
     trigger,
     setFocus,
-  } = useForm<BlogFormData>({ defaultValues: initialFormData });
+    clearErrors,
+    control
+  } = useForm<BlogFormData>({
+    defaultValues: {
+      ...initialFormData,
+      faq: [{ question: "", answer: "" }],
+    },
+  });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "faq",
+  });
   const title = watch("title");
   function setFieldValue(fieldName: string, value: string) {
     setContent(value);
   }
 
+
   const onSubmit = async (data: BlogFormData) => {
     try {
+
       setLoadingStatus({
         status: true,
         type: "upload",
       });
-      // if (selectedCategory === null) {
-      //   toast.error("Select a category");
-      //   return;
-      // }
-      // if (selectedSubCategory === "") {
-      //   toast.error("Select a sub category");
-      //   return;
-      // }
 
       const createBlogPayload = {
         ...data,
-        // category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
-        // sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -129,12 +145,10 @@ function AddBlog() {
       // }
       const createBlogPayload = {
         ...data,
-        // category: selectedCategory.name,
         tags: tags,
         body: content,
         section_ids: tabelOfContents,
         status: "drafted",
-        // sub_category: selectedSubCategory,
       };
 
       await uploadBlog(createBlogPayload);
@@ -497,6 +511,84 @@ function AddBlog() {
         <div>
           <ImgUploadSection />
         </div>
+      </div>
+      <div className="w-full max-w-[80%] mr-auto">
+        <h2 className="text-lg font-semibold mb-4">FAQs</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          {fields.map((field, index) => (
+            <div className="relative border border-slate-200 rounded-xl p-4 bg-gray-50 dark:bg-gray-700">
+              <div className="flex items-center justify-between gap-2">
+                <h3>FAQ #${index + 1}</h3>
+                {fields.length > 1 && (
+                  <button type="button" className="p-1 outline-none border border-red-600 rounded-md cursor-pointer py-1 text-sm px-2 bg-red-600 text-white" onClick={() => remove(index)}>✕</button>
+                )}
+              </div>
+              <div key={field.id} className="faq-item">
+                <div className="mb-4">
+                  <input className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
+                    placeholder="Question" style={{ width: '-webkit-fill-available' }}
+                    {...register(`faq.${index}.question`, {
+                      required: "Question is required",
+                      minLength: {
+                        value: MIN_QUESTION_LENGTH,
+                        message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
+                      },
+                    })}
+                    onKeyUp={() => clearErrors(`faq.${index}.question`)}
+                  />
+                  {errors.faq?.[index]?.question && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.faq[index].question?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <textarea className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
+                    placeholder="Answer" style={{ width: '-webkit-fill-available' }}
+                    {...register(`faq.${index}.answer`, {
+                      required: "Answer is required",
+                      minLength: {
+                        value: MIN_ANSWER_LENGTH,
+                        message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
+                      },
+                    })}
+                    onKeyUp={() => clearErrors(`faq.${index}.answer`)}
+                  />
+                  {errors.faq?.[index]?.answer && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.faq[index].answer?.message}
+                    </p>
+                  )}
+                </div>
+
+
+              </div>
+            </div>
+          ))}
+
+        </div>
+
+        {fields.length < 4 && (
+          <button
+            type="button"
+            onClick={async () => {
+              const isValid = await trigger("faq");
+              if (isValid) {
+                append({ question: "", answer: "" });
+              } else {
+                toast.error("Please fill all existing FAQs before adding a new one");
+              }
+            }}
+            className="p-1 mt-3 outline-none border border-black rounded-md cursor-pointer py-2 text-sm px-6 bg-black text-white"
+          >
+            + Add FAQ
+          </button>
+        )}
+
+
       </div>
 
       {/* blog editor section  */}

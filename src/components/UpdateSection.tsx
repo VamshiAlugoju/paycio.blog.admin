@@ -4,6 +4,7 @@ import {
   SubmitHandler,
   UseFormRegisterReturn,
   FieldError,
+  useFieldArray,
 } from "react-hook-form";
 
 import Dropdown from "../components/DropDown";
@@ -18,7 +19,7 @@ import { BlogPost } from "../pages/Blogs";
 import { cn } from "../lib/utils/cn";
 import ImgUploadSection from "./ImgUploadSection";
 import { toast } from "react-toastify";
-import { addSubCategoryApi, updateBlog } from "../lib/utils/blog.lib";
+import { faqProps, updateBlog } from "../lib/utils/blog.lib";
 
 export type category = {
   name: string;
@@ -50,8 +51,7 @@ function UpdateSection({
     meta_title: blog.meta_title,
     meta_desc: blog.meta_desc,
     meta_keywords: blog.meta_keywords,
-    category: blog.category,
-    sub_category: blog.sub_category,
+    faq: blog.faq,
     tags: blog.tags,
     featured_img: blog.featured_img,
     og_image: blog.og_image,
@@ -68,30 +68,31 @@ function UpdateSection({
   const [tags, setTags] = useState<string[]>(blog.tags || []);
   const [tagInput, setTagInput] = useState("");
   const [content, setContent] = useState<string>(blog.body);
-  const [selectedCategory, setSelctedCategory] = useState<category | null>(
-    categories.find((category) => category.name === blog.category) || null
-  );
+
   const [tabelOfContents, setTableOfcontents] = useState<string[]>(
     blog.section_ids || []
   );
-  const [subCategoryState, setSubCategoriesState] = useState({
-    selectedSubCategory: blog.sub_category,
-    subCategories: [],
-    newSubCategory: "",
-  });
+
 
   function setFieldValue(fieldName: string, value: string) {
     setContent(value);
   }
-
+  const MIN_QUESTION_LENGTH = 10; // minimum characters for question
+  const MIN_ANSWER_LENGTH = 20;   // minimum characters for answer
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    control,
     setValue,
-  } = useForm<BlogPost>({ defaultValues: blogInitialData });
-
+    trigger, clearErrors
+  } = useForm<BlogPost>({ defaultValues: { ...blogInitialData, faq: blogInitialData.faq?.length ? blogInitialData.faq : [{ question: "", answer: "" }] } });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "faq",
+  });
+  console.log('fields', fields)
   function removeTags(idx: number) {
     if (!isEditable) return;
     setTags((prev) => {
@@ -112,7 +113,9 @@ function UpdateSection({
   }
 
   const onSubmit = async (data: BlogPost) => {
+
     try {
+
       const { _id, createdAt, updatedAt, ...rest } = data;
 
       const updateBlogPayload = {
@@ -124,7 +127,7 @@ function UpdateSection({
       };
 
       const response = await updateBlog(updateBlogPayload, data._id);
-
+      console.log('response', response)
       setBlog(response.blog);
       setIsEditable(false);
     } catch (err) {
@@ -154,27 +157,9 @@ function UpdateSection({
     }
   }
 
-  async function addSubCategory() {
-    if (!subCategoryState.selectedSubCategory) {
-      toast.error("sub category couldn't be empty");
-      return;
-    }
-    if (!selectedCategory) {
-      toast.error("category couldn't be empty");
-      return;
-    }
-    await addSubCategoryApi(
-      selectedCategory?.name,
-      subCategoryState.selectedSubCategory
-    );
-    setSubCategoriesState((prev) => ({ ...prev, newSubCategory: "" }));
-  }
+  const MAX_FAQS = 4;
 
-  useEffect(() => {
-    setSelctedCategory(
-      categories.find((category) => category.name === blog.category) || null
-    );
-  }, [categories]);
+
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -249,101 +234,7 @@ function UpdateSection({
           </div>
 
           {/* categories list  */}
-          <div className="items-center gap-4 my-2 hidden">
-            <div className="mt-2">
-              <label className="" htmlFor="">
-                {" "}
-                Categories :{" "}
-              </label>
-              <Dropdown
-                onSelect={(option) => {
-                  const category = categories.find(
-                    (val) => val.name === option
-                  );
-                  if (category) {
-                    setSelctedCategory(category);
-                    setSubCategoriesState((prev) => ({
-                      ...prev,
-                      selectedSubCategory: "",
-                    }));
-                  }
-                }}
-                options={categories.map((items) => items.name)}
-                disabled={!isEditable}
-                defaultOption={blog.category}
-              />
-            </div>
 
-            {/* // add category  */}
-            <div className="flex items-center gap-2 ">
-              <input
-                type=""
-                className="border p-1 rounded-md "
-                placeholder="category name"
-                value={newCategory}
-                onChange={(e) => {
-                  setNewCateogory(e.target.value);
-                }}
-                disabled={!isEditable}
-              />
-              <button
-                disabled={!isEditable || newCategory.length === 0}
-                className={cn(
-                  "bg-black text-white p-1 px-2 outline-none border border-black rounded-md ",
-                  { "cursor-pointer": isEditable }
-                )}
-                onClick={addCategory}
-              >
-                {" "}
-                Add category{" "}
-              </button>
-            </div>
-          </div>
-          <div className="items-center gap-4 my-2 hidden">
-            <div className="mt-2 w-80 px-3 ">
-              <label className="" htmlFor="">
-                {" "}
-                Sub Category :{" "}
-              </label>
-              <Dropdown
-                onSelect={(option) => {
-                  setSubCategoriesState((prev) => ({
-                    ...prev,
-                    selectedSubCategory: option,
-                  }));
-                }}
-                options={
-                  selectedCategory?.sub_categories.map((items) => items) || []
-                }
-                defaultOption={subCategoryState.selectedSubCategory}
-                disabled={!isEditable}
-              />
-            </div>
-
-            {/* // add sub cateogory  */}
-            <div className="flex items-center gap-2 ">
-              <input
-                type=""
-                className="border p-1 rounded-md "
-                placeholder="Sub Category"
-                value={subCategoryState.newSubCategory}
-                onChange={(e) => {
-                  setSubCategoriesState((prev) => ({
-                    ...prev,
-                    newSubCategory: e.target.value,
-                  }));
-                }}
-              />
-              <button
-                disabled={newCategory.length === 0}
-                className="bg-black text-white p-1 px-2 outline-none border border-black rounded-md cursor-pointer "
-                onClick={addSubCategory}
-              >
-                {" "}
-                Add SubCategory{" "}
-              </button>
-            </div>
-          </div>
 
           {/* tags  */}
           <div className="flex flex-col gap-3 mt-4 ">
@@ -503,6 +394,84 @@ function UpdateSection({
         <div>
           <ImgUploadSection />
         </div>
+      </div>
+      <div className="w-full max-w-[80%] mr-auto">
+        <h2 className="text-lg font-semibold mb-4">FAQs</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          {fields.map((field, index) => (
+            <div className="relative border border-slate-200 rounded-xl p-4 bg-gray-50 dark:bg-gray-700">
+              <div className="flex items-center justify-between gap-2">
+                <h3>FAQ #${index + 1}</h3>
+                {fields.length > 1 && (
+                  <button type="button" className="p-1 outline-none border border-red-600 rounded-md cursor-pointer py-1 text-sm px-2 bg-red-600 text-white" onClick={() => remove(index)}>✕</button>
+                )}
+              </div>
+              <div key={field.id} className="faq-item">
+                <div className="mb-4">
+                  <input className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
+                    placeholder="Question" style={{ width: '-webkit-fill-available' }}
+                    {...register(`faq.${index}.question`, {
+                      required: "Question is required",
+                      minLength: {
+                        value: MIN_QUESTION_LENGTH,
+                        message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
+                      },
+                    })}
+                    onKeyUp={() => clearErrors(`faq.${index}.question`)}
+                  />
+                  {errors.faq?.[index]?.question && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.faq[index].question?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <textarea className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
+                    placeholder="Answer" style={{ width: '-webkit-fill-available' }}
+                    {...register(`faq.${index}.answer`, {
+                      required: "Answer is required",
+                      minLength: {
+                        value: MIN_ANSWER_LENGTH,
+                        message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
+                      },
+                    })}
+                    onKeyUp={() => clearErrors(`faq.${index}.answer`)}
+                  />
+                  {errors.faq?.[index]?.answer && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.faq[index].answer?.message}
+                    </p>
+                  )}
+                </div>
+
+
+              </div>
+            </div>
+          ))}
+
+        </div>
+
+        {fields.length < 4 && (
+          <button
+            type="button"
+            onClick={async () => {
+              const isValid = await trigger("faq");
+              if (isValid) {
+                append({ question: "", answer: "" });
+              } else {
+                toast.error("Please fill all existing FAQs before adding a new one");
+              }
+            }}
+            className="p-1 mt-3 outline-none border border-black rounded-md cursor-pointer py-2 text-sm px-6 bg-black text-white"
+          >
+            + Add FAQ
+          </button>
+        )}
+
+
       </div>
 
       {/* blog editor section  */}
