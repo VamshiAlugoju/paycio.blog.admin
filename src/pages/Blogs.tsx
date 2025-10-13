@@ -25,7 +25,7 @@ export interface BlogPost {
   jsonLd?: string;
   // category: string;
   // sub_category ?:string;
-  faq  : faqProps[]
+  faq: faqProps[]
   tags: string[];
   featured_img: string;
   og_image: string;
@@ -139,9 +139,10 @@ function Blogs() {
                 <p className="text-slate-800 text-sm mt-4 "> No Blogs found </p>
               ) : (
                 <>
-                  {filteredBlogs.map((blog) => {
+                  {filteredBlogs.map((blog, id) => {
                     return (
                       <BlogItem
+                        id={id}
                         key={blog.slug}
                         blog={blog}
                         handleBlogClick={handleBlogClick}
@@ -229,23 +230,25 @@ function TopSection({
 }
 
 type BlogItemProps = {
+  id:number,
   blog: BlogPost;
   handleBlogClick: (blog: BlogPost) => void;
   handleDeleteBlog: (blog: BlogPost) => Promise<void>;
 };
 
-function BlogItem({ blog, handleBlogClick, handleDeleteBlog }: BlogItemProps) {
+function BlogItem({ id,blog, handleBlogClick, handleDeleteBlog }: BlogItemProps) {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   return (
     <div
-      className="flex gap-4 border border-slate-200 rounded-md p-2  max-w-[80vw] w-full flex-shrink-0 hover:bg-slate-100 cursor-pointer group "
+      className="flex gap-4 items-center border border-slate-200 rounded-md p-2  max-w-[80vw] w-full flex-shrink-0 hover:bg-slate-100 cursor-pointer group "
       style={{
         borderColor: "gray",
       }}
       onClick={() => handleBlogClick(blog)}
     >
+      <span>{id+1}.</span>
       <span className=" w-14 h-14 flex-shrink-0 ">
         <img
           src={blog.featured_img}
@@ -374,15 +377,13 @@ const Switch = ({ checked, onChange }: SwitchProps) => {
       <button
         type="button"
         onClick={handleToggle}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 border-none cursor-pointer ${
-          internalChecked ? "bg-black" : "bg-gray-300"
-        }`}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 border-none cursor-pointer ${internalChecked ? "bg-black" : "bg-gray-300"
+          }`}
         aria-checked={internalChecked}
       >
         <span
-          className={`absolute h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
-            internalChecked ? "translate-x-5" : "translate-x-1"
-          }`}
+          className={`absolute h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${internalChecked ? "translate-x-5" : "translate-x-1"
+            }`}
         />
       </button>
     </div>

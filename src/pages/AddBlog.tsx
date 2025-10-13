@@ -89,7 +89,7 @@ function AddBlog() {
   } = useForm<BlogFormData>({
     defaultValues: {
       ...initialFormData,
-      faq: [{ question: "", answer: "" }],
+      faq: [],
     },
   });
   const { fields, append, remove } = useFieldArray({
@@ -530,11 +530,11 @@ function AddBlog() {
                   <input className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
                     placeholder="Question" style={{ width: '-webkit-fill-available' }}
                     {...register(`faq.${index}.question`, {
-                      required: "Question is required",
-                      minLength: {
-                        value: MIN_QUESTION_LENGTH,
-                        message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
-                      },
+                      // required: "Question is required",
+                      // minLength: {
+                      //   value: MIN_QUESTION_LENGTH,
+                      //   message: `Question must be at least ${MIN_QUESTION_LENGTH} characters`,
+                      // },
                     })}
                     onKeyUp={() => clearErrors(`faq.${index}.question`)}
                   />
@@ -549,11 +549,11 @@ function AddBlog() {
                   <textarea className="block w-full  py-2 border border-slate-200 rounded-lg px-3 focus:outline-none focus:border-slate-500 hover:shadow dark:bg-gray-600 dark:text-gray-100 "
                     placeholder="Answer" style={{ width: '-webkit-fill-available' }}
                     {...register(`faq.${index}.answer`, {
-                      required: "Answer is required",
-                      minLength: {
-                        value: MIN_ANSWER_LENGTH,
-                        message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
-                      },
+                      // required: "Answer is required",
+                      // minLength: {
+                      //   value: MIN_ANSWER_LENGTH,
+                      //   message: `Answer must be at least ${MIN_ANSWER_LENGTH} characters`,
+                      // },
                     })}
                     onKeyUp={() => clearErrors(`faq.${index}.answer`)}
                   />
